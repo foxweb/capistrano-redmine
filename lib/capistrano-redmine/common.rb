@@ -24,9 +24,12 @@ module Capistrano
 
         begin
           RedmineClient::Project.find(p)
+        rescue Errno::ECONNREFUSED
+          logger.important "Redmine error: Server unavailable."
+          return
         rescue ActiveResource::UnauthorizedAccess
           logger.important "Redmine error: Unauthorized Access. Check token."
-          return          
+          return
         rescue ActiveResource::ResourceNotFound
           logger.important "Redmine error: Project not found."
           return
