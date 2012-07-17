@@ -8,11 +8,11 @@ status from "Waiting for deploy" to "Waiting for review."
 
 Add this line to your application's Gemfile:
 
-    gem 'capistrano-redmine'
+    gem 'capistrano-redmine', :require => false
 
 or
 
-    gem 'capistrano-redmine', :git => 'git://github.com/foxweb/capistrano-redmine.git'
+    gem 'capistrano-redmine', :git => 'git://github.com/foxweb/capistrano-redmine.git', :require => false
 
 And then execute:
 
@@ -62,7 +62,7 @@ Or install it yourself as:
 
 1. To enable the API-style authentication, you have to check Enable REST API in Administration → Settings → Authentication.
 2. Create new user named like 'deploy' (or other) and login with this.
-3. You can find your API key on your account page ( /my/account ) when logged in, on the right-hand pane of the default layout. 
+3. You can find your API key on your account page ( /my/account ) when logged in, on the right-hand pane of the default layout.
 4. Copy and paste API key to the `config/deploy.rb` on `set :redmine_token`.
 
 ## Documentation

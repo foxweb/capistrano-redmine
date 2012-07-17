@@ -1,4 +1,6 @@
 # -*- encoding: utf-8 -*-
+require "capistrano-redmine/version"
+
 module Capistrano
   module Redmine
 

@@ -1,4 +1,6 @@
 # -*- encoding: utf-8 -*-
+require File.expand_path('../lib/capistrano-redmine/version', __FILE__)
+
 Gem::Specification.new do |gem|
   gem.authors       = ["Aleksey Kurepin"]
   gem.email         = ["lesha@kurepin.com"]
@@ -12,5 +14,5 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.name          = "capistrano-redmine"
   gem.require_paths = ["lib"]
-  gem.version       = "0.0.2"
+  gem.version       = Capistrano::Redmine::VERSION
 end
