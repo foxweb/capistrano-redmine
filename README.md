@@ -29,29 +29,42 @@ Or install it yourself as:
 3. Change directory to RAILS_ROOT of your app.
 3. Add this variables in `config/deploy.rb`:
 
-  ```ruby
-    # settings for capistrano-redmine
-    set :redmine_site, "http://localhost:3000" # Redmine app host and port
-    set :redmine_token, "376ba30fca80867d10a0ec0b505e5c97834901e3" # Redmine API key
-    set :redmine_projects, "test-project" # you project identifier or array of.
-    set :redmine_from_status, 1 # Redmine status ID "from"
-    set :redmine_to_status, 3 # Redmine status ID "to"
-    require "capistrano-redmine"
-  ```
+    ```ruby
+      # settings for capistrano-redmine
+      set :redmine_site, "http://localhost:3000" # Redmine app host and port
+      set :redmine_token, "376ba30fca80867d10a0ec0b505e5c97834901e3" # Redmine API key
+      set :redmine_options, {}
+      set :redmine_projects, "test-project" # you project identifier or array of.
+      set :redmine_from_status, 1 # Redmine status ID "from"
+      set :redmine_to_status, 3 # Redmine status ID "to"
+      require "capistrano-redmine"
+    ```
 
-  and
+    and
 
-  ```ruby
-  after "deploy", "redmine:update"
-  ```
+    ```ruby
+      after "deploy", "redmine:update"
+    ```
 
-  Specify the necessary settings for your Redmine.
+    Specify the necessary settings for your Redmine.
+
+    If you want to use specific options of ActiveResource (some HTTP of SSL options), you can add the following settings. Specify `:ssl` options if you use HTTPS connection to Redmine. Specify `:proxy` URL if you use HTTP-proxy.
+
+    ```ruby
+      set :redmine_options, {
+        :ssl => {
+                :cert => OpenSSL::X509::Certificate.new(File.read("cert.pem")),
+                :key  => OpenSSL::PKey::RSA.new(File.read("key.pem"))
+              },
+        :proxy => 'http://user:password@proxy.people.com:8080'
+      }
+    ```
 
 4. Check installation with command
 
     `bundle exec cap -T redmine`
 
-  You should see line:
+    You should see line:
 
     `cap redmine:update        # Update Redmine issues statuses.`
 
@@ -60,7 +73,7 @@ Or install it yourself as:
 
 ## Redmine API config
 
-1. To enable the API-style authentication, you have to check Enable REST API in Administration → Settings → Authentication.
+1. To enable the API-style authentication, you have to check Enable REST API in **Administration → Settings → Authentication**.
 2. Create new user named like 'deploy' (or other) and login with this.
 3. You can find your API key on your account page ( /my/account ) when logged in, on the right-hand pane of the default layout.
 4. Copy and paste API key to the `config/deploy.rb` on `set :redmine_token`.

@@ -4,17 +4,19 @@ require "capistrano-redmine/version"
 module Capistrano
   module Redmine
 
-    def Redmine.configure(site, token)
+    def Redmine.configure(site, token, options = {})
       RedmineClient::Base.configure do
         self.site     = site
         self.format   = :xml
         self.user     = token
         self.password = ""
+        self.ssl_options = options[:ssl] if options[:ssl]
+        self.proxy = options[:proxy] if options[:proxy]
       end
     end
 
-    def Redmine.update(site, token, projects, from_status, to_status, logger)
-      Redmine.configure(site, token)
+    def Redmine.update(site, token, options, projects, from_status, to_status, logger)
+      Redmine.configure(site, token, options)
       projects = [projects] unless projects.is_a? Array
 
       projects.each do |p|
@@ -37,13 +39,17 @@ module Capistrano
           return
         end
 
-        statuses = RedmineClient::IssueStatus.find(:all).inject({}) do |memo, s|
-          memo.merge s.id => s.name
-        end
+        if issue_statuses = RedmineClient::IssueStatus.all
+          statuses = issue_statuses.inject({}) do |memo, s|
+            memo.merge s.id => s.name
+          end
 
-        if statuses[from_status.to_s].nil? || statuses[to_status.to_s].nil?
-          logger.important "Redmine error: Invalid issue status (or statuses)."
-          return
+          if statuses[from_status.to_s].nil? || statuses[to_status.to_s].nil?
+            logger.important "Redmine error: Invalid issue status (or statuses)."
+            return
+          end
+        else
+          logger.debug "Redmine notice: Failed to get a list of possible statuses."
         end
 
         begin
@@ -80,6 +86,7 @@ configuration.load do
       Capistrano::Redmine.update(
         redmine_site,
         redmine_token,
+        exists?('redmine_options') ? redmine_options : {},
         redmine_projects,
         redmine_from_status,
         redmine_to_status,
