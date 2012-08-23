@@ -7,9 +7,8 @@ module Capistrano
     def Redmine.configure(site, token, options = {})
       RedmineClient::Base.configure do
         self.site     = site
-        self.format   = :xml
-        self.user     = token
-        self.password = ""
+        self.format   = 'json'
+        self.token     = token
         self.ssl_options = options[:ssl] if options[:ssl]
         self.proxy = options[:proxy] if options[:proxy]
       end
@@ -31,20 +30,21 @@ module Capistrano
         rescue Errno::ECONNREFUSED
           logger.important "Redmine error: Server unavailable."
           return
-        rescue ActiveResource::UnauthorizedAccess
-          logger.important "Redmine error: Unauthorized Access. Check token."
+        rescue SocketError
+          logger.important "Redmine error: Check hostname, port, protocol."
           return
-        rescue ActiveResource::ResourceNotFound
-          logger.important "Redmine error: Project not found."
+        rescue JSON::ParserError
+          logger.important "Redmine error: HTTP error. Unauthorized Access. Check token. Project not found."
           return
         end
 
+        # This code get error if you use ChiliProject instead Redmine
         if issue_statuses = RedmineClient::IssueStatus.all
           statuses = issue_statuses.inject({}) do |memo, s|
-            memo.merge s.id => s.name
+            memo.merge s['id'] => s['name']
           end
 
-          if statuses[from_status.to_s].nil? || statuses[to_status.to_s].nil?
+          if statuses[from_status].nil? || statuses[to_status].nil?
             logger.important "Redmine error: Invalid issue status (or statuses)."
             return
           end
@@ -53,19 +53,13 @@ module Capistrano
         end
 
         begin
-          issues = RedmineClient::Issue.find(:all, :params => {
-            :project_id => p,
-            :status_id => from_status,
-            :limit => 100
-            }
-          )
+          issues = RedmineClient::Issue.all ({ project_id: p, status_id: from_status, limit: 100 })
 
           issues.each do |i|
-            i.status_id = to_status
-            i.save
-            logger.debug "Update ##{i.id} #{i.subject}"
+            RedmineClient::Issue.update(i['id'], { "issue[status_id]" => to_status })
+            logger.debug "Update ##{i['id']} #{i['subject']}"
           end
-        rescue ActiveResource::ResourceInvalid
+        rescue
           logger.important "Redmine error: Update issue error."
         end
       end
